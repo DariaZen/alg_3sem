@@ -10,7 +10,7 @@ struct Point {
   Point() = default;
   Point(int64_t x, int64_t y) : x(x), y(y) {}
 
-  bool operator<(const Point &other) const {
+  bool operator<(const Point& other) const {
     if (x == other.x) {
       return y < other.y;
     }
@@ -18,12 +18,18 @@ struct Point {
   }
 };
 
-bool ClockWiseRotation(const Point &A, const Point &B, const Point &C) {
-  return A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y) < 0;
+bool ClockwiseRotation(const Point& first, const Point& second,
+                       const Point& third) {
+  return first.x * (second.y - third.y) + second.x * (third.y - first.y) +
+             third.x * (first.y - second.y) <
+         0;
 }
 
-bool CounterClockwiseRotation(const Point &A, const Point &B, const Point &C) {
-  return A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y) > 0;
+bool CounterClockwiseRotation(const Point& first, const Point& second,
+                              const Point& third) {
+  return first.x * (second.y - third.y) + second.x * (third.y - first.y) +
+             third.x * (first.y - second.y) >
+         0;
 }
 
 struct ConvexHull {
@@ -32,24 +38,26 @@ struct ConvexHull {
   Point right;
   vector<Point> convex_hull;
 
-  ConvexHull(const vector<Point> &recieved_set)
-      : set(SortSet(recieved_set)), left(set[0]), right(set[set.size() - 1]),
+  ConvexHull(const vector<Point>& recieved_set)
+      : set(SortSet(recieved_set)),
+        left(set[0]),
+        right(set[set.size() - 1]),
         convex_hull(MakeConvexHull()) {}
 
-  vector<Point> SortSet(const vector<Point> &recieved_set) const {
+  static vector<Point> SortSet(const vector<Point>& recieved_set) {
     vector<Point> sorted_set = recieved_set;
     std::sort(sorted_set.begin(), sorted_set.end());
     return sorted_set;
   }
 
-  void ProcessPart(vector<Point> &part, size_t current_point,
-                   bool Rotation(const Point &, const Point &,
-                                 const Point &)) const {
+  void ProcessPart(vector<Point>& part, size_t current_point,
+                   bool rotation(const Point&, const Point&,
+                                 const Point&)) const {
     const size_t kMinEnvelopSize = 2;
     if (current_point == set.size() - 1 ||
-        Rotation(left, set[current_point], right)) {
+        rotation(left, set[current_point], right)) {
       while (part.size() >= kMinEnvelopSize &&
-             !Rotation(part[part.size() - kMinEnvelopSize],
+             !rotation(part[part.size() - kMinEnvelopSize],
                        part[part.size() - 1], set[current_point])) {
         part.pop_back();
       }
@@ -61,7 +69,7 @@ struct ConvexHull {
     vector<Point> upper_part{left};
     vector<Point> down_part{left};
     for (size_t p = 1; p < set.size(); ++p) {
-      ProcessPart(upper_part, p, ClockWiseRotation);
+      ProcessPart(upper_part, p, ClockwiseRotation);
       ProcessPart(down_part, p, CounterClockwiseRotation);
     }
     for (size_t p = down_part.size() - 2; p > 0; --p) {
@@ -72,11 +80,24 @@ struct ConvexHull {
 
   void Write() const {
     std::cout << convex_hull.size() << "\n";
-    for (const auto &point : convex_hull) {
+    for (const auto& point : convex_hull) {
       std::cout << point.x << " " << point.y << "\n";
     }
   }
 };
+
+vector<Point> ReadSet() {
+  int64_t points_number;
+  std::cin >> points_number;
+  vector<Point> set(points_number);
+  for (int64_t i = 0; i < points_number; ++i) {
+    int64_t x;
+    int64_t y;
+    std::cin >> x >> y;
+    set[i] = Point(x, y);
+  }
+  return set;
+}
 
 int main() {
   vector<Point> set = ReadSet();

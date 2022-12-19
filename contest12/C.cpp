@@ -5,27 +5,27 @@ struct Point {
   int64_t y;
   Point(int64_t x, int64_t y) : x(x), y(y) {}
 
-  Point &operator-=(const Point &other) {
+  Point& operator-=(const Point& other) {
     x -= other.x;
     y -= other.y;
     return *this;
   }
 
-  Point operator-(const Point &other) const {
+  Point operator-(const Point& other) const {
     Point copy = *this;
     copy -= other;
     return copy;
   }
 
-  int64_t operator*(const Point &second) const {
+  int64_t operator*(const Point& second) const {
     return (x * second.y - y * second.x);
   }
 
-  bool operator==(const Point &other) const {
-    return x == other.x && y == other.y ? true : false;
+  bool operator==(const Point& other) const {
+    return x == other.x && y == other.y;
   }
 
-  bool operator!=(const Point &other) const { return !(*this == other); }
+  bool operator!=(const Point& other) const { return !(*this == other); }
 };
 
 struct Segment {
@@ -56,44 +56,42 @@ struct Segment {
     kInOnePlane,
   };
 
-  int find_sign(int64_t number) const {
-    switch (number >= 0) {
-      case false:
-        return -1;
-      case true:
-        return number == 0 ? 0 : 1;
+  static int FindSign(int64_t number) {
+    switch (number) {
+      case 0:
+        return 0;
+      default:
+        return number > 0 ? 1 : -1;
     }
   }
 
-  EndsPosition AreEndsInDifferentPlanes(const Segment &other) const {
+  EndsPosition AreEndsInDifferentPlanes(const Segment& other) const {
     int64_t vector_product1 =
         (second_end - first_end) * (other.second_end - first_end);
     int64_t vector_product2 =
         (second_end - first_end) * (other.first_end - first_end);
-    switch (find_sign(vector_product1 * vector_product2)) {
-    case -1:
-      return kInDifferentPlanes;
-    case 0:
-      return kOnOneLine;
-    case 1:
-      return kInOnePlane;
+    switch (FindSign(vector_product1 * vector_product2)) {
+      case -1:
+        return kInDifferentPlanes;
+      case 0:
+        return kOnOneLine;
+      default:
+        return kInOnePlane;
     }
   }
 };
 
-bool IsFirstSegmentLeft(const Segment &first, const Segment &second) {
+bool IsFirstSegmentLeft(const Segment& first, const Segment& second) {
   Point left = first.FindLeft();
-  return left.x <= second.first_end.x && left.x <= second.second_end.x ? true
-                                                                       : false;
+  return left.x <= second.first_end.x && left.x <= second.second_end.x;
 }
 
-bool IsFirstSegmentDown(const Segment &first, const Segment &second) {
+bool IsFirstSegmentDown(const Segment& first, const Segment& second) {
   Point down = first.FindDown();
-  return down.y <= second.first_end.y && down.y <= second.second_end.y ? true
-                                                                       : false;
+  return down.y <= second.first_end.y && down.y <= second.second_end.y;
 }
 
-bool IsXIntersection(const Segment &first, const Segment &second) {
+bool IsXIntersection(const Segment& first, const Segment& second) {
   if (IsFirstSegmentLeft(first, second)) {
     Point right = first.FindRight();
     Point left = second.FindLeft();
@@ -104,7 +102,7 @@ bool IsXIntersection(const Segment &first, const Segment &second) {
   return (right.x >= left.x);
 }
 
-bool IsYIntersection(const Segment &first, const Segment &second) {
+bool IsYIntersection(const Segment& first, const Segment& second) {
   if (IsFirstSegmentDown(first, second)) {
     Point upper = first.FindUpper();
     Point down = second.FindDown();
@@ -115,7 +113,7 @@ bool IsYIntersection(const Segment &first, const Segment &second) {
   return (upper.y >= down.y);
 }
 
-bool IsIntersection(const Segment &first, const Segment &second) {
+bool IsIntersection(const Segment& first, const Segment& second) {
   using EndsPosition = Segment::EndsPosition;
   if (first.first_end == first.second_end &&
       second.first_end == second.second_end &&
@@ -132,8 +130,8 @@ bool IsIntersection(const Segment &first, const Segment &second) {
   }
   switch (are_in_different_planes1) {
     case Segment::kInDifferentPlanes:
-      return are_in_different_planes2 == Segment::kInOnePlane ? false : true;
-    case Segment::kOnOneLine:
+      return are_in_different_planes2 != Segment::kInOnePlane;
+    default:
       return are_in_different_planes2 == Segment::kInDifferentPlanes
                  ? true
                  : IsXIntersection(first, second) &&
